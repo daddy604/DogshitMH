@@ -13,6 +13,8 @@ namespace D2RAssist
         public UInt16 PlayerX;
         public UInt16 PlayerY;
         public UInt32 MapSeed;
+        public UInt16 Difficulty;
+        public UInt16 LevelNo;
     }
 
     class MapSeedReader
@@ -28,7 +30,10 @@ namespace D2RAssist
                 IntPtr processAddress = gameProcess.MainModule.BaseAddress;
                 IntPtr pPlayerUnit = IntPtr.Add(processAddress, 0x2055E40);
 
+
                 byte[] buffer = new byte[8];
+                               
+
                 ReadProcessMemory(processHandle, pPlayerUnit, buffer, buffer.Length, out IntPtr bytesRead);
 
                 IntPtr playerUnit = (IntPtr)BitConverter.ToInt64(buffer, 0);
@@ -38,17 +43,16 @@ namespace D2RAssist
                 ReadProcessMemory(processHandle, pPlayer, buffer, buffer.Length, out bytesRead);
                 IntPtr player = (IntPtr)BitConverter.ToInt64(buffer, 0);
 
-                // This was for Quest struct not difficulty
-                // IntPtr aDifficulty = IntPtr.Add(player, 0x10);
 
                 byte[] playerNameBuffer = new byte[16];
                 ReadProcessMemory(processHandle, player, playerNameBuffer, playerNameBuffer.Length, out bytesRead);
                 string playerName = Encoding.ASCII.GetString(playerNameBuffer);
                 Console.WriteLine("Player name: " + playerName);
-
-                //ReadProcessMemory(processHandle, aDifficulty, buffer, buffer.Length, out bytesRead);
-                //ulong difficulty = BitConverter.ToUInt64(buffer, 0);
-                //Console.WriteLine("Difficulty: " + difficulty);
+                // This was for Quest struct not difficulty
+                IntPtr aDifficulty = IntPtr.Add(processAddress, 0x1Eb0ECC);
+                ReadProcessMemory(processHandle, aDifficulty, buffer, buffer.Length, out bytesRead);
+                UInt16 difficulty = BitConverter.ToUInt16(buffer, 0);
+                Console.WriteLine("Difficulty: " + difficulty);
 
                 ReadProcessMemory(processHandle, pAct, buffer, buffer.Length, out bytesRead);
                 IntPtr act = (IntPtr)BitConverter.ToInt64(buffer, 0);
@@ -59,28 +63,28 @@ namespace D2RAssist
 
                 ReadProcessMemory(processHandle, pPath, buffer, buffer.Length, out bytesRead);
                 IntPtr path = (IntPtr)BitConverter.ToInt64(buffer, 0);
-               /* IntPtr pRoom1 = IntPtr.Add(path, 0x1C);
+                IntPtr pRoom1 = IntPtr.Add(path, 0x20);
 
                 ReadProcessMemory(processHandle, pRoom1, buffer, buffer.Length, out bytesRead);
                 IntPtr aRoom1 = (IntPtr)BitConverter.ToInt64(buffer, 0);
-                IntPtr pRoom2 = IntPtr.Add(aRoom1, 0x10);
+                IntPtr pRoom2 = IntPtr.Add(aRoom1, 0x18);
 
                 ReadProcessMemory(processHandle, pRoom2, buffer, buffer.Length, out bytesRead);
                 IntPtr aRoom2 = (IntPtr)BitConverter.ToInt64(buffer, 0);
-                IntPtr pLevel = IntPtr.Add(aRoom2, 0x58);
+                IntPtr pLevel = IntPtr.Add(aRoom2, 0x90);
 
                 ReadProcessMemory(processHandle, pLevel, buffer, buffer.Length, out bytesRead);
                 IntPtr aLevel = (IntPtr)BitConverter.ToInt64(buffer, 0);
 
-                IntPtr aLevelNo = IntPtr.Add(aLevel, 0x1D0);
+                IntPtr aLevelNo = IntPtr.Add(aLevel, 0x1F8);
 
                 byte[] dwordBuffer = new byte[4];
 
 
                 ReadProcessMemory(processHandle, aLevelNo, dwordBuffer, dwordBuffer.Length, out bytesRead);
 
-                uint dwLevelNo = BitConverter.ToUInt32(dwordBuffer, 0);
-                Console.WriteLine("dwLevelNo: " + dwLevelNo); */
+                UInt16 dwLevelNo = BitConverter.ToUInt16(dwordBuffer, 0);
+                Console.WriteLine("dwLevelNo: " + dwLevelNo);
 
                 IntPtr posXAddress = IntPtr.Add(path, 0x02);
                 IntPtr posYAddress = IntPtr.Add(path, 0x06);
@@ -93,12 +97,15 @@ namespace D2RAssist
 
                 ReadProcessMemory(processHandle, posYAddress, buffer, buffer.Length, out bytesRead);
                 UInt16 playerY = BitConverter.ToUInt16(buffer, 0);
+                
 
                 return new GameData()
                 {
                     MapSeed = mapSeed,
                     PlayerX = playerX,
-                    PlayerY = playerY
+                    PlayerY = playerY,
+                    Difficulty = difficulty,
+                    LevelNo = dwLevelNo
                 };
             }
             catch(Exception e)
