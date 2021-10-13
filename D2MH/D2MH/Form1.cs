@@ -29,7 +29,7 @@ namespace D2RAssist
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            // AllocConsole();
+            //AllocConsole();
             // AttachConsole(-1);
             //Console.WriteLine("D2R Assist");
             //MapSeedReader.GetMapSeed();
@@ -47,7 +47,6 @@ namespace D2RAssist
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool AttachConsole(int dwProcessId);
-
         private async void GameDataTimer_Tick(object sender, EventArgs e)
         {
             currentGameData = MapSeedReader.GetMapSeed();
@@ -55,7 +54,7 @@ namespace D2RAssist
             if (currentGameData != null)
             {
 
-                if (lastGameData?.MapSeed != currentGameData.MapSeed && currentGameData.MapSeed != 0)
+                if ((lastGameData?.MapSeed != currentGameData.MapSeed && currentGameData.MapSeed != 0 || lastGameData.LevelNo != currentGameData.LevelNo || lastGameData.Difficulty != currentGameData.Difficulty) && currentGameData.LevelNo < 150 && currentGameData.LevelNo > 0)
                 {
                     if (mapApiSession != null)
                     {
@@ -72,8 +71,8 @@ namespace D2RAssist
 
                     var values = new Dictionary<string, uint>
                     {
-                        // { "id", "1" },
-                        {"difficulty",2},
+                        {"id", currentGameData.LevelNo},
+                        {"difficulty", currentGameData.Difficulty},
                         {"mapid", currentGameData.MapSeed}
                     };
 
@@ -257,7 +256,9 @@ namespace D2RAssist
 
             using (HttpClient client = new HttpClient())
             {
-                int index = listBox1.SelectedIndex;
+                //int index = listBox1.SelectedIndex;
+
+                int index = currentGameData.LevelNo;
 
                 if (index == -1)
                 {
@@ -269,5 +270,6 @@ namespace D2RAssist
                 this.mapData = JsonConvert.DeserializeObject<MapData>(await response.Content.ReadAsStringAsync());
             }
         }
+
     }
 }
